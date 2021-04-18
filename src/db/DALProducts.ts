@@ -1,19 +1,65 @@
-import fs from 'fs';
-import path from 'path';
+import knex, { Knex } from 'knex';
+import options from './knexOptions';
 import { Product } from '../entities/Product';
 
 export class DALProducts { 
-    
-    private filepath: string = path.join(__dirname, '/storage/products.json')
+    constructor() {
+        let conn: Knex = knex(options);
+        conn.schema.hasTable('products').then( exists => {
+            if (!exists) {
+                conn.schema.createTable('products', table => {
+                    table.increments('id').notNullable().primary();
+                    table.string('name').notNullable();
+                    table.string('description').notNullable();
+                    table.string('code').notNullable().unique();
+                    table.string('image').notNullable();
+                    table.decimal('price').notNullable().unsigned();
+                    table.integer('stock').notNullable().unsigned();
+                    table.timestamp('timestamp').notNullable();
+                })
+                .then(() => { console.log('OK')} )
+                .catch( (err) => { 
+                    console.log('Error creating products table'); 
+                    throw err;
+                })
+            }
+        })
+        .finally(() => {
+            conn.destroy()
+        })
+    }
 
     read = async () => {
         try {
-            const fileContent: Buffer = await fs.promises.readFile(this.filepath);
-            const parsedData = JSON.parse(fileContent.toString())
-            const products: Array<Product> = parsedData.map( (p: any) => new Product(p.id, p.name, p.description, p.code, p.image, p.price, p.stock, p.timestamp));
+            let conn: Knex = knex(options);
+            const products: Array<Product> = [];
 
+            await conn.from('products').select('*')
+                .then( rows => {
+                    for (let row of rows) {
+                        const product: Product = new Product(
+                            row['id'],
+                            row['name'],
+                            row['description'],
+                            row['code'],
+                            row['image'],
+                            row['price'],
+                            row['stock'],
+                            row['timestamp'],
+                        );
+
+                        products.push(product);
+                    }
+                })
+                .catch( err => {
+                    console.log('Error trying to get products');
+                    throw err;
+                })
+                .finally( () => {
+                    conn.destroy();
+                })
+            
             return products;
-
         } catch(e) {
             console.log(e)
             return [];
@@ -22,54 +68,87 @@ export class DALProducts {
 
     save = async(params: any) => {
         try {
-            const fileContent = await this.read();
-            const latestObj = fileContent.reduce((prev, curr) => {
-                return (prev.id > curr.id) ?  prev : curr
-            });
+            let currentTimestamp = new Date();
 
-            const id = latestObj.id + 1;
-            const exist = fileContent.filter( p => p.code === params.code);
+            const row = {
+                name: params.name, 
+                description: params.description, 
+                code: params.code, 
+                image: params.image, 
+                price: params.price, 
+                stock: params.stock, 
+                timestamp: currentTimestamp
+            };
 
-            if (exist.length !== 0) 
-                return false;
-            
-            const currentTimestamp: number = Date.now();
-            const newProduct = new Product(id, params.name, params.description, params.code, params.image, params.price, params.stock, currentTimestamp);
+            let conn: Knex = knex(options);
 
-            fileContent.push(newProduct)
+            const newProduct = conn('products').insert(row)
+                .then( async(result) => {
+                    const id = result[0];
+                    let rows = await conn.from('products').select('*').where('id','=', id);
+                    for (let row of rows) {
+                        const product: Product = new Product(
+                            row['id'],
+                            row['name'],
+                            row['description'],
+                            row['code'],
+                            row['image'],
+                            row['price'],
+                            row['stock'],
+                            row['timestamp'],
+                        );
+                        return product;
+                    }
+                    
+                })
+                .catch(err => console.log(err))
+                .finally(() => conn.destroy());
 
-            await fs.promises.writeFile(this.filepath, JSON.stringify(fileContent, null, '\t'))  
-            
             return newProduct;
-
         } catch(e) {
-            console.log(e)
+            console.log(e.message);
             return false;
         }
     }
 
-    update = async(product: Product) => {
+    update = async(params: any) => {
         try {
-            const fileContent = await this.read();
-            const exists = fileContent.filter( p => p.id === product.id);
+            let currentTimestamp = new Date();
+            let conn: Knex = knex(options);
 
-            if (exists.length === 0) 
-                return null;
+            const product = await conn.from('products').where('id', '=', params.id).update({
+                name: params.name, 
+                description: params.description,
+                image: params.image, 
+                price: params.price, 
+                stock: params.stock, 
+                timestamp: currentTimestamp
+            })
+            .then( async() => {
+                    let rows = await conn.from('products').select('*').where('id','=', params.id);
+                    for (let row of rows) {
+                        const product: Product = new Product(
+                            row['id'],
+                            row['name'],
+                            row['description'],
+                            row['code'],
+                            row['image'],
+                            row['price'],
+                            row['stock'],
+                            row['timestamp'],
+                        );
+
+                        return product;
+                    }
+                    
+                })
+            .catch(err => {
+                    console.log(err);
+                    return null;
+                })
+            .finally(() => conn.destroy());
             
-            fileContent.map( p => {
-                if (p.id === product.id) {
-                    p.name = product.name
-                    p.description = product.description;
-                    p.code = product.code;
-                    p.image = product.image;
-                    p.price = product.price;
-                    p.stock = product.stock;
-                    p.timestamp = product.timestamp;
-                }
-            });
-
-            await fs.promises.writeFile(this.filepath, JSON.stringify(fileContent, null, '\t'))  
-            return fileContent.filter( p => p.id === product.id)[0];
+            return product;
         } catch (e) {
             console.log(e);
             return null;
@@ -78,20 +157,20 @@ export class DALProducts {
 
     delete = async(id: number) => {
         try {
-            const fileContent = await this.read();
-            const productToDelete = fileContent.filter( p => p.id === id);
-    
-            if (productToDelete.length === 0) 
-                return false;
+            let conn: Knex = knex(options);
             
-            const editedFileContent = fileContent.filter( p => p.id !== id);
-    
-            await fs.promises.writeFile(this.filepath, JSON.stringify(editedFileContent, null, '\t'))  
-            return true;
-    
-        } catch(e) {
-            console.log(e)
-            return false
+            const isDeleted = await conn.from('products').where('id', '=', id).delete()
+            .then( async() => true)
+            .catch(err => {
+                    console.log(err);
+                    return false;
+                })
+            .finally(() => conn.destroy());
+            
+            return isDeleted;
+        } catch (e) {
+            console.log(e);
+            return null;
         }
     }
 }

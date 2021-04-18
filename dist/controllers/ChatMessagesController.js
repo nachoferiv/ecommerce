@@ -36,34 +36,35 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ShoppingCartsController = void 0;
-var DALShoppingCart_1 = require("../db/DALShoppingCart");
-var ShoppingCartsController = /** @class */ (function () {
-    function ShoppingCartsController() {
+exports.ChatMessagesController = void 0;
+var ChatMessage_1 = require("../entities/ChatMessage");
+var DALChatMessages_1 = require("../db/DALChatMessages");
+var ChatMessagesController = /** @class */ (function () {
+    function ChatMessagesController() {
         var _this = this;
-        this.db = new DALShoppingCart_1.DALShoppingCart();
+        this.db = new DALChatMessages_1.DALChatMessages();
         this.get = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var shoppingCartId_1, allShoppingCarts, shoppingCart, shoppingCarts, error_1;
+            var messageId_1, allMessages, message, messages, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 4, , 5]);
-                        shoppingCartId_1 = Number(req.params.id);
-                        if (!shoppingCartId_1) return [3 /*break*/, 2];
+                        messageId_1 = req.params.id ? Number(req.params.id) : null;
+                        if (!messageId_1) return [3 /*break*/, 2];
                         return [4 /*yield*/, this.db.read()];
                     case 1:
-                        allShoppingCarts = _a.sent();
-                        shoppingCart = allShoppingCarts.filter(function (s) { return s.id === shoppingCartId_1; })[0];
-                        if (!shoppingCart) {
+                        allMessages = _a.sent();
+                        message = allMessages.filter(function (p) { return p.id === messageId_1; })[0];
+                        if (!message) {
                             res.status(404).json({ description: 'Resource not found' });
                             return [2 /*return*/];
                         }
-                        res.status(200).send(shoppingCart);
+                        res.status(200).send(message);
                         return [2 /*return*/];
                     case 2: return [4 /*yield*/, this.db.read()];
                     case 3:
-                        shoppingCarts = _a.sent();
-                        res.status(200).json(shoppingCarts);
+                        messages = _a.sent();
+                        res.status(200).json(messages);
                         return [3 /*break*/, 5];
                     case 4:
                         error_1 = _a.sent();
@@ -74,52 +75,58 @@ var ShoppingCartsController = /** @class */ (function () {
             });
         }); };
         this.create = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var shoppingCartCreated, e_1;
+            var creatdMessage, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        if (!req.body.products) {
-                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The shopping cart can not be created.' });
+                        if (!req.body.email || !req.body.message) {
+                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The message can not be created.' });
                             return [2 /*return*/];
                         }
                         return [4 /*yield*/, this.db.save(req.body)];
                     case 1:
-                        shoppingCartCreated = _a.sent();
-                        if (!shoppingCartCreated) {
+                        creatdMessage = _a.sent();
+                        if (!creatdMessage) {
                             res.status(400).json({ error: 3, description: 'Something went wrong...' });
                             return [2 /*return*/];
                         }
-                        res.status(200).json(shoppingCartCreated);
+                        res.status(200).json(creatdMessage);
                         return [3 /*break*/, 3];
                     case 2:
                         e_1 = _a.sent();
+                        console.log(e_1.message);
                         res.status(500).json({ error: 1, description: 'Something went wrong...' });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
                 }
             });
         }); };
-        this.delete = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var shoppingCartId, isDeleted, e_2;
+        this.update = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+            var messageId, message, status, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        shoppingCartId = Number(req.params.id);
-                        if (!shoppingCartId) {
-                            res.status(400).json({ error: 'Few parameters were provided. The shopping cart can not be deleted' });
+                        messageId = Number(req.params.id);
+                        if (!messageId) {
+                            res.status(400).json({ error: 2, description: 'Message id must be provided.' });
                             return [2 /*return*/];
                         }
-                        return [4 /*yield*/, this.db.delete(shoppingCartId)];
+                        if (!req.body.email || !req.body.message || !req.body.tiemstamp) {
+                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The message can not be created.' });
+                            return [2 /*return*/];
+                        }
+                        message = new ChatMessage_1.ChatMessage(messageId, req.body.email, req.body.message, req.body.timestamp);
+                        return [4 /*yield*/, this.db.update(message)];
                     case 1:
-                        isDeleted = _a.sent();
-                        if (!isDeleted) {
-                            res.status(400).json({ error: 'The product does not exist' });
+                        status = _a.sent();
+                        if (!status) {
+                            res.status(400).json({ error: 'The message does not exist' });
                             return [2 /*return*/];
                         }
                         else {
-                            res.status(200).json({ message: 'deleted' });
+                            res.status(200).json({ message: 'updated', chatMessage: status });
                         }
                         return [3 /*break*/, 3];
                     case 2:
@@ -131,7 +138,38 @@ var ShoppingCartsController = /** @class */ (function () {
                 }
             });
         }); };
+        this.delete = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+            var messageId, isDeleted, e_3;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        messageId = Number(req.params.id);
+                        if (!messageId) {
+                            res.status(400).json({ error: 'Few parameters were provided. The message can not be deleted' });
+                            return [2 /*return*/];
+                        }
+                        return [4 /*yield*/, this.db.delete(messageId)];
+                    case 1:
+                        isDeleted = _a.sent();
+                        if (!isDeleted) {
+                            res.status(400).json({ error: 'The message does not exist' });
+                            return [2 /*return*/];
+                        }
+                        else {
+                            res.status(200).json({ message: 'deleted' });
+                        }
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_3 = _a.sent();
+                        console.log(e_3);
+                        res.status(400).json({ error: "Whoops! Something went wrong..." });
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        }); };
     }
-    return ShoppingCartsController;
+    return ChatMessagesController;
 }());
-exports.ShoppingCartsController = ShoppingCartsController;
+exports.ChatMessagesController = ChatMessagesController;

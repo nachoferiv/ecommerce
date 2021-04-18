@@ -43,57 +43,130 @@ var ProductsController = /** @class */ (function () {
     function ProductsController() {
         var _this = this;
         this.db = new DALProducts_1.DALProducts();
-        this.getAll = function () { return __awaiter(_this, void 0, void 0, function () {
-            var allProducts;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.db.read()];
-                    case 1:
-                        allProducts = _a.sent();
-                        return [2 /*return*/, allProducts];
-                }
-            });
-        }); };
-        this.getById = function (id) { return __awaiter(_this, void 0, void 0, function () {
-            var allProducts, product;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.db.read()];
-                    case 1:
-                        allProducts = _a.sent();
-                        product = allProducts.filter(function (p) { return p.id === id; })[0];
-                        return [2 /*return*/, product];
-                }
-            });
-        }); };
-        this.create = function (params) { return __awaiter(_this, void 0, void 0, function () {
-            var newProduct;
-            return __generator(this, function (_a) {
-                newProduct = this.db.save(params);
-                return [2 /*return*/, newProduct];
-            });
-        }); };
-        this.update = function (params) { return __awaiter(_this, void 0, void 0, function () {
-            var product, updatedProduct;
+        this.get = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+            var productId_1, allProducts, product, products, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        product = new Product_1.Product(params.id, params.name, params.description, params.code, params.image, params.price, params.stock, params.timestamp);
-                        return [4 /*yield*/, this.db.update(product)];
+                        _a.trys.push([0, 4, , 5]);
+                        productId_1 = Number(req.params.id);
+                        if (!productId_1) return [3 /*break*/, 2];
+                        return [4 /*yield*/, this.db.read()];
                     case 1:
-                        updatedProduct = _a.sent();
-                        return [2 /*return*/, updatedProduct];
+                        allProducts = _a.sent();
+                        product = allProducts.filter(function (p) { return p.id === productId_1; })[0];
+                        if (!product) {
+                            res.status(404).json({ description: 'Resource not found' });
+                            return [2 /*return*/];
+                        }
+                        res.status(200).send(product);
+                        return [2 /*return*/];
+                    case 2: return [4 /*yield*/, this.db.read()];
+                    case 3:
+                        products = _a.sent();
+                        res.status(200).json(products);
+                        return [3 /*break*/, 5];
+                    case 4:
+                        error_1 = _a.sent();
+                        res.status(500).json({ error: 0, description: 'Whoops! Something went wrong...;' });
+                        return [3 /*break*/, 5];
+                    case 5: return [2 /*return*/];
                 }
             });
         }); };
-        this.delete = function (id) { return __awaiter(_this, void 0, void 0, function () {
-            var isDeleted;
+        this.create = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+            var createdProduct, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.db.delete(id)];
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        if (!req.body.name || !req.body.description || !req.body.code || !req.body.image || !req.body.price || !req.body.stock) {
+                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The product can not be created.' });
+                            return [2 /*return*/];
+                        }
+                        return [4 /*yield*/, this.db.save(req.body)];
+                    case 1:
+                        createdProduct = _a.sent();
+                        console.log(createdProduct);
+                        if (!createdProduct) {
+                            res.status(400).json({ error: 3, description: 'Something went wrong...' });
+                            return [2 /*return*/];
+                        }
+                        res.status(200).json(createdProduct);
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_1 = _a.sent();
+                        console.log(e_1.message);
+                        res.status(500).json({ error: 1, description: 'Something went wrong...' });
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        }); };
+        this.update = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+            var productId, product, status, e_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        productId = Number(req.params.id);
+                        if (!productId) {
+                            res.status(400).json({ error: 2, description: 'Product id must be provided.' });
+                            return [2 /*return*/];
+                        }
+                        if (!req.body.name || !req.body.description || !req.body.code || !req.body.image || !req.body.price || !req.body.stock) {
+                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The product can not be created.' });
+                            return [2 /*return*/];
+                        }
+                        product = new Product_1.Product(Number(req.params.id), req.body.name, req.body.description, req.body.code, req.body.image, req.body.price, req.body.stock, req.body.timestamp);
+                        return [4 /*yield*/, this.db.update(product)];
+                    case 1:
+                        status = _a.sent();
+                        if (!status) {
+                            res.status(400).json({ error: 'The product does not exist' });
+                            return [2 /*return*/];
+                        }
+                        else {
+                            res.status(200).json({ message: 'updated', product: status });
+                        }
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_2 = _a.sent();
+                        console.log(e_2);
+                        res.status(400).json({ error: "Whoops! Something went wrong..." });
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
+                }
+            });
+        }); };
+        this.delete = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
+            var productId, isDeleted, e_3;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        productId = Number(req.params.id);
+                        if (!productId) {
+                            res.status(400).json({ error: 'Few parameters were provided. The product can not be deleted' });
+                            return [2 /*return*/];
+                        }
+                        return [4 /*yield*/, this.db.delete(productId)];
                     case 1:
                         isDeleted = _a.sent();
-                        return [2 /*return*/, isDeleted];
+                        if (!isDeleted) {
+                            res.status(400).json({ error: 'The product does not exist' });
+                            return [2 /*return*/];
+                        }
+                        else {
+                            res.status(200).json({ message: 'deleted' });
+                        }
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_3 = _a.sent();
+                        console.log(e_3);
+                        res.status(400).json({ error: "Whoops! Something went wrong..." });
+                        return [3 /*break*/, 3];
+                    case 3: return [2 /*return*/];
                 }
             });
         }); };

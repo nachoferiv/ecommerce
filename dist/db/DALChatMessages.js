@@ -39,27 +39,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DALProducts = void 0;
+exports.DALChatMessages = void 0;
 var knex_1 = __importDefault(require("knex"));
 var knexOptions_1 = __importDefault(require("./knexOptions"));
-var Product_1 = require("../entities/Product");
-var DALProducts = /** @class */ (function () {
-    function DALProducts() {
+var ChatMessage_1 = require("../entities/ChatMessage");
+var DALChatMessages = /** @class */ (function () {
+    function DALChatMessages() {
         var _this = this;
         this.read = function () { return __awaiter(_this, void 0, void 0, function () {
-            var conn_1, products_1, e_1;
+            var conn_1, messages_1, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
                         conn_1 = knex_1.default(knexOptions_1.default);
-                        products_1 = [];
-                        return [4 /*yield*/, conn_1.from('products').select('*')
+                        messages_1 = [];
+                        return [4 /*yield*/, conn_1.from('chat_messages').select('*')
                                 .then(function (rows) {
                                 for (var _i = 0, rows_1 = rows; _i < rows_1.length; _i++) {
                                     var row = rows_1[_i];
-                                    var product = new Product_1.Product(row['id'], row['name'], row['description'], row['code'], row['image'], row['price'], row['stock'], row['timestamp']);
-                                    products_1.push(product);
+                                    var message = new ChatMessage_1.ChatMessage(row['id'], row['email'], row['message'], row['timestamp']);
+                                    messages_1.push(message);
                                 }
                             })
                                 .catch(function (err) {
@@ -71,7 +71,7 @@ var DALProducts = /** @class */ (function () {
                             })];
                     case 1:
                         _a.sent();
-                        return [2 /*return*/, products_1];
+                        return [2 /*return*/, messages_1];
                     case 2:
                         e_1 = _a.sent();
                         console.log(e_1);
@@ -81,35 +81,31 @@ var DALProducts = /** @class */ (function () {
             });
         }); };
         this.save = function (params) { return __awaiter(_this, void 0, void 0, function () {
-            var currentTimestamp, row, conn_2, newProduct;
+            var currentTimestamp, row, conn_2, newMessage;
             var _this = this;
             return __generator(this, function (_a) {
                 try {
                     currentTimestamp = new Date();
                     row = {
-                        name: params.name,
-                        description: params.description,
-                        code: params.code,
-                        image: params.image,
-                        price: params.price,
-                        stock: params.stock,
+                        email: params.email,
+                        message: params.message,
                         timestamp: currentTimestamp
                     };
                     conn_2 = knex_1.default(knexOptions_1.default);
-                    newProduct = conn_2('products').insert(row)
+                    newMessage = conn_2('chat_messages').insert(row)
                         .then(function (result) { return __awaiter(_this, void 0, void 0, function () {
-                        var id, rows, _i, rows_2, row_1, product;
+                        var id, rows, _i, rows_2, row_1, message;
                         return __generator(this, function (_a) {
                             switch (_a.label) {
                                 case 0:
                                     id = result[0];
-                                    return [4 /*yield*/, conn_2.from('products').select('*').where('id', '=', id)];
+                                    return [4 /*yield*/, conn_2.from('chat_messages').select('*').where('id', '=', id)];
                                 case 1:
                                     rows = _a.sent();
                                     for (_i = 0, rows_2 = rows; _i < rows_2.length; _i++) {
                                         row_1 = rows_2[_i];
-                                        product = new Product_1.Product(row_1['id'], row_1['name'], row_1['description'], row_1['code'], row_1['image'], row_1['price'], row_1['stock'], row_1['timestamp']);
-                                        return [2 /*return*/, product];
+                                        message = new ChatMessage_1.ChatMessage(row_1['id'], row_1['email'], row_1['message'], row_1['timestamp']);
+                                        return [2 /*return*/, message];
                                     }
                                     return [2 /*return*/];
                             }
@@ -117,7 +113,7 @@ var DALProducts = /** @class */ (function () {
                     }); })
                         .catch(function (err) { return console.log(err); })
                         .finally(function () { return conn_2.destroy(); });
-                    return [2 /*return*/, newProduct];
+                    return [2 /*return*/, newMessage];
                 }
                 catch (e) {
                     console.log(e.message);
@@ -127,7 +123,7 @@ var DALProducts = /** @class */ (function () {
             });
         }); };
         this.update = function (params) { return __awaiter(_this, void 0, void 0, function () {
-            var currentTimestamp, conn_3, product, e_2;
+            var currentTimestamp, conn_3, updatedMessage, e_2;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
@@ -135,25 +131,22 @@ var DALProducts = /** @class */ (function () {
                         _a.trys.push([0, 2, , 3]);
                         currentTimestamp = new Date();
                         conn_3 = knex_1.default(knexOptions_1.default);
-                        return [4 /*yield*/, conn_3.from('products').where('id', '=', params.id).update({
-                                name: params.name,
-                                description: params.description,
-                                image: params.image,
-                                price: params.price,
-                                stock: params.stock,
+                        return [4 /*yield*/, conn_3.from('chat_messages').where('id', '=', params.id).update({
+                                email: params.email,
+                                message: params.message,
                                 timestamp: currentTimestamp
                             })
                                 .then(function () { return __awaiter(_this, void 0, void 0, function () {
-                                var rows, _i, rows_3, row, product_1;
+                                var rows, _i, rows_3, row, message;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
-                                        case 0: return [4 /*yield*/, conn_3.from('products').select('*').where('id', '=', params.id)];
+                                        case 0: return [4 /*yield*/, conn_3.from('chat_messages').select('*').where('id', '=', params.id)];
                                         case 1:
                                             rows = _a.sent();
                                             for (_i = 0, rows_3 = rows; _i < rows_3.length; _i++) {
                                                 row = rows_3[_i];
-                                                product_1 = new Product_1.Product(row['id'], row['name'], row['description'], row['code'], row['image'], row['price'], row['stock'], row['timestamp']);
-                                                return [2 /*return*/, product_1];
+                                                message = new ChatMessage_1.ChatMessage(row['id'], row['email'], row['message'], row['timestamp']);
+                                                return [2 /*return*/, message];
                                             }
                                             return [2 /*return*/];
                                     }
@@ -165,8 +158,8 @@ var DALProducts = /** @class */ (function () {
                             })
                                 .finally(function () { return conn_3.destroy(); })];
                     case 1:
-                        product = _a.sent();
-                        return [2 /*return*/, product];
+                        updatedMessage = _a.sent();
+                        return [2 /*return*/, updatedMessage];
                     case 2:
                         e_2 = _a.sent();
                         console.log(e_2);
@@ -183,7 +176,7 @@ var DALProducts = /** @class */ (function () {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
                         conn_4 = knex_1.default(knexOptions_1.default);
-                        return [4 /*yield*/, conn_4.from('products').where('id', '=', id).delete()
+                        return [4 /*yield*/, conn_4.from('chat_messages').where('id', '=', id).delete()
                                 .then(function () { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
                                 return [2 /*return*/, true];
                             }); }); })
@@ -204,21 +197,17 @@ var DALProducts = /** @class */ (function () {
             });
         }); };
         var conn = knex_1.default(knexOptions_1.default);
-        conn.schema.hasTable('products').then(function (exists) {
+        conn.schema.hasTable('chat_messages').then(function (exists) {
             if (!exists) {
-                conn.schema.createTable('products', function (table) {
+                conn.schema.createTable('chat_messages', function (table) {
                     table.increments('id').notNullable().primary();
-                    table.string('name').notNullable();
-                    table.string('description').notNullable();
-                    table.string('code').notNullable().unique();
-                    table.string('image').notNullable();
-                    table.decimal('price').notNullable().unsigned();
-                    table.integer('stock').notNullable().unsigned();
+                    table.string('email').notNullable();
+                    table.string('message').notNullable();
                     table.timestamp('timestamp').notNullable();
                 })
                     .then(function () { console.log('OK'); })
                     .catch(function (err) {
-                    console.log('Error creating products table');
+                    console.log('Error creating messages table');
                     throw err;
                 });
             }
@@ -227,6 +216,6 @@ var DALProducts = /** @class */ (function () {
             conn.destroy();
         });
     }
-    return DALProducts;
+    return DALChatMessages;
 }());
-exports.DALProducts = DALProducts;
+exports.DALChatMessages = DALChatMessages;
