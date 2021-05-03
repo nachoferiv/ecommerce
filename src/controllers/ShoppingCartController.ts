@@ -1,18 +1,13 @@
 import express, { Request, Response, NextFunction, RouterOptions, Router } from 'express';
-import { isAdmin, isAuthorized } from '../middlewares/Auth';
-import { DALShoppingCart } from '../db/DALShoppingCart';
-import { ShoppingCart } from '../entities/ShoppingCart';
+import { ShoppingCart } from '../db/models/ShoppingCart';
 
 export class ShoppingCartsController {
-    private db: DALShoppingCart = new DALShoppingCart();
-
     get = async(req: Request, res: Response) => {
         try {
-            const shoppingCartId: number = Number(req.params.id);
+            const shoppingCartId: string | null = req.params.id;
     
             if (shoppingCartId) {
-                const allShoppingCarts = await this.db.read();
-                const shoppingCart = allShoppingCarts.filter( (s: ShoppingCart) => s.id === shoppingCartId)[0];
+                const shoppingCart = await ShoppingCart.findById(shoppingCartId);
                 if (!shoppingCart) {
                     res.status(404).json({ description: 'Resource not found'});
                     return;
@@ -22,7 +17,7 @@ export class ShoppingCartsController {
                 return;
             }
     
-            const shoppingCarts = await this.db.read();
+            const shoppingCarts = await ShoppingCart.find();
             res.status(200).json(shoppingCarts)
         } catch (error) {
             res.status(500).json({ error: 0, description: 'Whoops! Something went wrong...;' })
@@ -36,8 +31,8 @@ export class ShoppingCartsController {
               res.status(400).json({error: 2, description: 'Few parameters were provided. The shopping cart can not be created.'});
               return;
             }
-    
-            const shoppingCartCreated = await this.db.save(req.body);
+            const shoppingCart = new ShoppingCart(req.body)
+            const shoppingCartCreated = shoppingCart.save();
       
             if (!shoppingCartCreated) {
               res.status(400).json({error: 3, description: 'Something went wrong...'});
@@ -52,13 +47,14 @@ export class ShoppingCartsController {
     
     delete = async(req: Request, res: Response) => {
         try {
-            const shoppingCartId = Number(req.params.id);
+            const shoppingCartId: string = req.params.id;
             if (!shoppingCartId) {
                 res.status(400).json({ error: 'Few parameters were provided. The shopping cart can not be deleted' });
                 return;
             }
     
-            const isDeleted = await this.db.delete(shoppingCartId);
+            const shoppingCart = await ShoppingCart.findById(shoppingCartId)
+            const isDeleted = shoppingCart.remove();
         
             if (!isDeleted) {
               res.status(400).json({ error: 'The product does not exist' });

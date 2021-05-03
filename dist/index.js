@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.app = void 0;
 var dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
+require('./db/mongoose');
 var express_1 = __importDefault(require("express"));
 var ProductsRouter_1 = require("./routers/ProductsRouter");
 var ShoppingCartsRouter_1 = require("./routers/ShoppingCartsRouter");

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 dotenv.config();
-import path from 'path';
+require('./db/mongoose');
 import express, { Application, Request, Response, NextFunction } from 'express';
 import { productsRouter } from './routers/ProductsRouter';
 import { shoppingCartRouter } from './routers/ShoppingCartsRouter';

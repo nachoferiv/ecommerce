@@ -37,30 +37,28 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ShoppingCartsController = void 0;
-var DALShoppingCart_1 = require("../db/DALShoppingCart");
+var ShoppingCart_1 = require("../db/models/ShoppingCart");
 var ShoppingCartsController = /** @class */ (function () {
     function ShoppingCartsController() {
         var _this = this;
-        this.db = new DALShoppingCart_1.DALShoppingCart();
         this.get = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var shoppingCartId_1, allShoppingCarts, shoppingCart, shoppingCarts, error_1;
+            var shoppingCartId, shoppingCart, shoppingCarts, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 4, , 5]);
-                        shoppingCartId_1 = Number(req.params.id);
-                        if (!shoppingCartId_1) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.db.read()];
+                        shoppingCartId = req.params.id;
+                        if (!shoppingCartId) return [3 /*break*/, 2];
+                        return [4 /*yield*/, ShoppingCart_1.ShoppingCart.findById(shoppingCartId)];
                     case 1:
-                        allShoppingCarts = _a.sent();
-                        shoppingCart = allShoppingCarts.filter(function (s) { return s.id === shoppingCartId_1; })[0];
+                        shoppingCart = _a.sent();
                         if (!shoppingCart) {
                             res.status(404).json({ description: 'Resource not found' });
                             return [2 /*return*/];
                         }
                         res.status(200).send(shoppingCart);
                         return [2 /*return*/];
-                    case 2: return [4 /*yield*/, this.db.read()];
+                    case 2: return [4 /*yield*/, ShoppingCart_1.ShoppingCart.find()];
                     case 3:
                         shoppingCarts = _a.sent();
                         res.status(200).json(shoppingCarts);
@@ -74,46 +72,42 @@ var ShoppingCartsController = /** @class */ (function () {
             });
         }); };
         this.create = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var shoppingCartCreated, e_1;
+            var shoppingCart, shoppingCartCreated;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        if (!req.body.products) {
-                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The shopping cart can not be created.' });
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, this.db.save(req.body)];
-                    case 1:
-                        shoppingCartCreated = _a.sent();
-                        if (!shoppingCartCreated) {
-                            res.status(400).json({ error: 3, description: 'Something went wrong...' });
-                            return [2 /*return*/];
-                        }
-                        res.status(200).json(shoppingCartCreated);
-                        return [3 /*break*/, 3];
-                    case 2:
-                        e_1 = _a.sent();
-                        res.status(500).json({ error: 1, description: 'Something went wrong...' });
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                try {
+                    if (!req.body.products) {
+                        res.status(400).json({ error: 2, description: 'Few parameters were provided. The shopping cart can not be created.' });
+                        return [2 /*return*/];
+                    }
+                    shoppingCart = new ShoppingCart_1.ShoppingCart(req.body);
+                    shoppingCartCreated = shoppingCart.save();
+                    if (!shoppingCartCreated) {
+                        res.status(400).json({ error: 3, description: 'Something went wrong...' });
+                        return [2 /*return*/];
+                    }
+                    res.status(200).json(shoppingCartCreated);
                 }
+                catch (e) {
+                    res.status(500).json({ error: 1, description: 'Something went wrong...' });
+                }
+                return [2 /*return*/];
             });
         }); };
         this.delete = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var shoppingCartId, isDeleted, e_2;
+            var shoppingCartId, shoppingCart, isDeleted, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        shoppingCartId = Number(req.params.id);
+                        shoppingCartId = req.params.id;
                         if (!shoppingCartId) {
                             res.status(400).json({ error: 'Few parameters were provided. The shopping cart can not be deleted' });
                             return [2 /*return*/];
                         }
-                        return [4 /*yield*/, this.db.delete(shoppingCartId)];
+                        return [4 /*yield*/, ShoppingCart_1.ShoppingCart.findById(shoppingCartId)];
                     case 1:
-                        isDeleted = _a.sent();
+                        shoppingCart = _a.sent();
+                        isDeleted = shoppingCart.remove();
                         if (!isDeleted) {
                             res.status(400).json({ error: 'The product does not exist' });
                             return [2 /*return*/];
@@ -123,8 +117,8 @@ var ShoppingCartsController = /** @class */ (function () {
                         }
                         return [3 /*break*/, 3];
                     case 2:
-                        e_2 = _a.sent();
-                        console.log(e_2);
+                        e_1 = _a.sent();
+                        console.log(e_1);
                         res.status(400).json({ error: "Whoops! Something went wrong..." });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];

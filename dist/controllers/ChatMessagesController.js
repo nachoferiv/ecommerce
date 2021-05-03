@@ -37,101 +37,97 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ChatMessagesController = void 0;
-var ChatMessage_1 = require("../entities/ChatMessage");
-var DALChatMessages_1 = require("../db/DALChatMessages");
+var ChatMessage_1 = require("../db/models/ChatMessage");
 var ChatMessagesController = /** @class */ (function () {
     function ChatMessagesController() {
         var _this = this;
-        this.db = new DALChatMessages_1.DALChatMessages();
         this.get = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var messageId_1, allMessages, message, messages, error_1;
+            var messageId, message, messages, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 4, , 5]);
-                        messageId_1 = req.params.id ? Number(req.params.id) : null;
-                        if (!messageId_1) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.db.read()];
+                        messageId = req.params.id;
+                        if (!messageId) return [3 /*break*/, 2];
+                        return [4 /*yield*/, ChatMessage_1.ChatMessage.findById(messageId)];
                     case 1:
-                        allMessages = _a.sent();
-                        message = allMessages.filter(function (p) { return p.id === messageId_1; })[0];
+                        message = _a.sent();
                         if (!message) {
                             res.status(404).json({ description: 'Resource not found' });
                             return [2 /*return*/];
                         }
                         res.status(200).send(message);
                         return [2 /*return*/];
-                    case 2: return [4 /*yield*/, this.db.read()];
+                    case 2: return [4 /*yield*/, ChatMessage_1.ChatMessage.find()];
                     case 3:
                         messages = _a.sent();
                         res.status(200).json(messages);
                         return [3 /*break*/, 5];
                     case 4:
                         error_1 = _a.sent();
-                        res.status(500).json({ error: 0, description: 'Whoops! Something went wrong...;' });
+                        res.status(500).json({ error: 'Whoops! Something went wrong...;' });
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/];
                 }
             });
         }); };
         this.create = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var creatdMessage, e_1;
+            var message;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        if (!req.body.email || !req.body.message) {
-                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The message can not be created.' });
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, this.db.save(req.body)];
-                    case 1:
-                        creatdMessage = _a.sent();
-                        if (!creatdMessage) {
+                try {
+                    if (!req.body.email || !req.body.message) {
+                        res.status(400).json({ error: 'Few parameters were provided. The message can not be created.' });
+                        return [2 /*return*/];
+                    }
+                    message = new ChatMessage_1.ChatMessage(req.body);
+                    message.save(function (err, newMessage) {
+                        if (err) {
                             res.status(400).json({ error: 3, description: 'Something went wrong...' });
-                            return [2 /*return*/];
+                            return;
                         }
-                        res.status(200).json(creatdMessage);
-                        return [3 /*break*/, 3];
-                    case 2:
-                        e_1 = _a.sent();
-                        console.log(e_1.message);
-                        res.status(500).json({ error: 1, description: 'Something went wrong...' });
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                        res.status(200).json(newMessage);
+                    });
                 }
+                catch (e) {
+                    res.status(500).json({ error: 'Something went wrong...' });
+                }
+                return [2 /*return*/];
             });
         }); };
         this.update = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var messageId, message, status, e_2;
+            var messageId, message_1, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        messageId = Number(req.params.id);
+                        messageId = req.params.id;
                         if (!messageId) {
-                            res.status(400).json({ error: 2, description: 'Message id must be provided.' });
+                            res.status(400).json({ error: 'Message id must be provided.' });
                             return [2 /*return*/];
                         }
-                        if (!req.body.email || !req.body.message || !req.body.tiemstamp) {
-                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The message can not be created.' });
+                        if (!req.body.email || !req.body.message) {
+                            res.status(400).json({ error: 'Few parameters were provided. The message can not be created.' });
                             return [2 /*return*/];
                         }
-                        message = new ChatMessage_1.ChatMessage(messageId, req.body.email, req.body.message, req.body.timestamp);
-                        return [4 /*yield*/, this.db.update(message)];
+                        return [4 /*yield*/, ChatMessage_1.ChatMessage.findById(messageId)];
                     case 1:
-                        status = _a.sent();
-                        if (!status) {
-                            res.status(400).json({ error: 'The message does not exist' });
+                        message_1 = _a.sent();
+                        if (!message_1) {
+                            res.status(404).json({ error: 3, description: 'Message not found' });
                             return [2 /*return*/];
                         }
-                        else {
-                            res.status(200).json({ message: 'updated', chatMessage: status });
-                        }
+                        Object.keys(req.body).forEach(function (field) { return message_1[field] = req.body[field]; });
+                        message_1.save(function (err, newMessage) {
+                            if (err) {
+                                res.status(400).json({ error: 'Whoops! Something went wrong...' });
+                                return;
+                            }
+                            res.status(200).json({ message: 'updated', chatMessage: newMessage });
+                        });
                         return [3 /*break*/, 3];
                     case 2:
-                        e_2 = _a.sent();
-                        console.log(e_2);
+                        e_1 = _a.sent();
+                        console.log(e_1);
                         res.status(400).json({ error: "Whoops! Something went wrong..." });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
@@ -139,19 +135,20 @@ var ChatMessagesController = /** @class */ (function () {
             });
         }); };
         this.delete = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var messageId, isDeleted, e_3;
+            var messageId, message, isDeleted, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        messageId = Number(req.params.id);
+                        messageId = req.params.id;
                         if (!messageId) {
                             res.status(400).json({ error: 'Few parameters were provided. The message can not be deleted' });
                             return [2 /*return*/];
                         }
-                        return [4 /*yield*/, this.db.delete(messageId)];
+                        return [4 /*yield*/, ChatMessage_1.ChatMessage.findById(messageId)];
                     case 1:
-                        isDeleted = _a.sent();
+                        message = _a.sent();
+                        isDeleted = message.remove();
                         if (!isDeleted) {
                             res.status(400).json({ error: 'The message does not exist' });
                             return [2 /*return*/];
@@ -161,8 +158,8 @@ var ChatMessagesController = /** @class */ (function () {
                         }
                         return [3 /*break*/, 3];
                     case 2:
-                        e_3 = _a.sent();
-                        console.log(e_3);
+                        e_2 = _a.sent();
+                        console.log(e_2);
                         res.status(400).json({ error: "Whoops! Something went wrong..." });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];

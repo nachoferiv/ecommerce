@@ -37,102 +37,96 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductsController = void 0;
-var Product_1 = require("../entities/Product");
-var DALProducts_1 = require("../db/DALProducts");
+var Product_1 = require("../db/models/Product");
 var ProductsController = /** @class */ (function () {
     function ProductsController() {
         var _this = this;
-        this.db = new DALProducts_1.DALProducts();
         this.get = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var productId_1, allProducts, product, products, error_1;
+            var productId, product, products, error_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 4, , 5]);
-                        productId_1 = Number(req.params.id);
-                        if (!productId_1) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.db.read()];
+                        productId = req.params.id;
+                        if (!productId) return [3 /*break*/, 2];
+                        return [4 /*yield*/, Product_1.Product.findById(req.params.id)];
                     case 1:
-                        allProducts = _a.sent();
-                        product = allProducts.filter(function (p) { return p.id === productId_1; })[0];
+                        product = _a.sent();
                         if (!product) {
                             res.status(404).json({ description: 'Resource not found' });
                             return [2 /*return*/];
                         }
                         res.status(200).send(product);
                         return [2 /*return*/];
-                    case 2: return [4 /*yield*/, this.db.read()];
+                    case 2: return [4 /*yield*/, Product_1.Product.find()];
                     case 3:
                         products = _a.sent();
                         res.status(200).json(products);
                         return [3 /*break*/, 5];
                     case 4:
                         error_1 = _a.sent();
-                        res.status(500).json({ error: 0, description: 'Whoops! Something went wrong...;' });
+                        console.log(error_1);
+                        res.status(500).json({ error: 'Whoops! Something went wrong...;' });
                         return [3 /*break*/, 5];
                     case 5: return [2 /*return*/];
                 }
             });
         }); };
         this.create = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var createdProduct, e_1;
+            var product;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        if (!req.body.name || !req.body.description || !req.body.code || !req.body.image || !req.body.price || !req.body.stock) {
-                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The product can not be created.' });
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, this.db.save(req.body)];
-                    case 1:
-                        createdProduct = _a.sent();
-                        console.log(createdProduct);
-                        if (!createdProduct) {
-                            res.status(400).json({ error: 3, description: 'Something went wrong...' });
-                            return [2 /*return*/];
-                        }
-                        res.status(200).json(createdProduct);
-                        return [3 /*break*/, 3];
-                    case 2:
-                        e_1 = _a.sent();
-                        console.log(e_1.message);
-                        res.status(500).json({ error: 1, description: 'Something went wrong...' });
-                        return [3 /*break*/, 3];
-                    case 3: return [2 /*return*/];
+                try {
+                    if (!req.body.name || !req.body.description || !req.body.code || !req.body.image || !req.body.price || !req.body.stock) {
+                        res.status(400).json({ error: 2, description: 'Few parameters were provided. The product can not be created.' });
+                        return [2 /*return*/];
+                    }
+                    product = new Product_1.Product(req.body);
+                    product.save(function (err, newProduct) {
+                        if (err)
+                            res.status(400).json({ error: 'Something went wrong...' });
+                        res.status(200).json(newProduct);
+                    });
                 }
+                catch (e) {
+                    res.status(500).json({ error: 'Something went wrong...' });
+                }
+                return [2 /*return*/];
             });
         }); };
         this.update = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var productId, product, status, e_2;
+            var productId, product_1, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        productId = Number(req.params.id);
+                        productId = req.params.id;
                         if (!productId) {
-                            res.status(400).json({ error: 2, description: 'Product id must be provided.' });
+                            res.status(400).json({ error: 'Product id must be provided.' });
                             return [2 /*return*/];
                         }
                         if (!req.body.name || !req.body.description || !req.body.code || !req.body.image || !req.body.price || !req.body.stock) {
-                            res.status(400).json({ error: 2, description: 'Few parameters were provided. The product can not be created.' });
+                            res.status(400).json({ error: 'Few parameters were provided. The product can not be updated.' });
                             return [2 /*return*/];
                         }
-                        product = new Product_1.Product(Number(req.params.id), req.body.name, req.body.description, req.body.code, req.body.image, req.body.price, req.body.stock, req.body.timestamp);
-                        return [4 /*yield*/, this.db.update(product)];
+                        return [4 /*yield*/, Product_1.Product.findOne({ _id: productId })];
                     case 1:
-                        status = _a.sent();
-                        if (!status) {
-                            res.status(400).json({ error: 'The product does not exist' });
+                        product_1 = _a.sent();
+                        if (!product_1) {
+                            res.status(404).json({ error: 'Product not found' });
                             return [2 /*return*/];
                         }
-                        else {
-                            res.status(200).json({ message: 'updated', product: status });
-                        }
+                        Object.keys(req.body).forEach(function (field) { return product_1[field] = req.body[field]; });
+                        product_1.save(function (err, newProduct) {
+                            if (err) {
+                                res.status(400).json({ error: 'Whoops! Something went wrong...' });
+                                return;
+                            }
+                            res.status(200).json({ message: 'updated', product: newProduct });
+                        });
                         return [3 /*break*/, 3];
                     case 2:
-                        e_2 = _a.sent();
-                        console.log(e_2);
+                        e_1 = _a.sent();
+                        console.log(e_1);
                         res.status(400).json({ error: "Whoops! Something went wrong..." });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
@@ -140,19 +134,20 @@ var ProductsController = /** @class */ (function () {
             });
         }); };
         this.delete = function (req, res) { return __awaiter(_this, void 0, void 0, function () {
-            var productId, isDeleted, e_3;
+            var productId, product, isDeleted, e_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
-                        productId = Number(req.params.id);
+                        productId = req.params.id;
                         if (!productId) {
                             res.status(400).json({ error: 'Few parameters were provided. The product can not be deleted' });
                             return [2 /*return*/];
                         }
-                        return [4 /*yield*/, this.db.delete(productId)];
+                        return [4 /*yield*/, Product_1.Product.findById(productId)];
                     case 1:
-                        isDeleted = _a.sent();
+                        product = _a.sent();
+                        isDeleted = product.remove();
                         if (!isDeleted) {
                             res.status(400).json({ error: 'The product does not exist' });
                             return [2 /*return*/];
@@ -162,8 +157,8 @@ var ProductsController = /** @class */ (function () {
                         }
                         return [3 /*break*/, 3];
                     case 2:
-                        e_3 = _a.sent();
-                        console.log(e_3);
+                        e_2 = _a.sent();
+                        console.log(e_2);
                         res.status(400).json({ error: "Whoops! Something went wrong..." });
                         return [3 /*break*/, 3];
                     case 3: return [2 /*return*/];
